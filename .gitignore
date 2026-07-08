@@ -1,0 +1,151 @@
+# ============================================
+# 校园寻路与失物招领系统 .gitignore
+# ============================================
+
+# -------------------- Claude AI --------------------
+.claude/
+
+# -------------------- 操作系统 --------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# -------------------- IDE / 编辑器 --------------------
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+
+# -------------------- 前端 (Vue/Node.js) --------------------
+# 依赖
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 构建产物
+dist/
+dist-ssr/
+build/
+.cache/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# -------------------- 后端 (Java/Spring Boot) --------------------
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Spring Boot
+spring.log
+application-local.yml
+application-local.properties
+
+# -------------------- 数据库 --------------------
+*.sql.backup
+dump.sql
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+
+# -------------------- 文件上传 --------------------
+# 用户上传的文件（保留目录结构示例）
+uploads/
+!uploads/.gitkeep
+
+# 临时文件
+temp/
+tmp/
+*.tmp
+
+# -------------------- 文档草稿 --------------------
+*.bak
+*.swp
+*.swo
+*.draft
+
+# -------------------- 测试 --------------------
+coverage/
+*.lcov
+.nyc_output/
+TEST-*.xml
+
+# -------------------- 其他 --------------------
+# 日志
+logs/
+log/
+*.log
+
+# 压缩包
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# 密钥和证书
+*.key
+*.pem
+*.cert
+*.p12
+*.jks
+
+# 备份
+*.backup
+backup/

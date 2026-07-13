@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园寻路与失物招领系统管理后台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @font-face {
+            font-family: 'emoji';
+            src: url('./seguiemj.ttf');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif, 'emoji';
+        }
+
+        body {
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding-top: 20px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #a0aec0;
+        }
+
+        .sidebar-item:hover {
+            background-color: #4a5568;
+            color: #fff;
+        }
+
+        .sidebar-item.active {
+            background-color: #4299e1;
+            color: #fff;
+        }
+
+        .sidebar-item i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            background-color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .top-nav h1 {
+            font-size: 20px;
+            color: #2d3748;
+        }
+
+        .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-info {
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background-color: #e53e3e;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c53030;
+        }
+
+        .dashboard {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .stat-card:nth-child(1) .stat-value { color: #4299e1; }
+        .stat-card:nth-child(2) .stat-value { color: #38a169; }
+        .stat-card:nth-child(3) .stat-value { color: #805ad5; }
+        .stat-card:nth-child(4) .stat-value { color: #ed8936; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            color: #e53e3e;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: #fff;
+            border-left: 4px solid #e53e3e;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 14px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast-icon {
+            color: #e53e3e;
+            font-size: 16px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-logo, .sidebar-item span { display: none; }
+            .sidebar-item { justify-content: center; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        /* 页面切换 */
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input, .search-box select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus, .search-box select:focus {
+            border-color: #4299e1;
+        }
+
+        .search-box input { width: 200px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background-color: #4299e1; color: #fff; }
+        .btn-primary:hover { background-color: #3182ce; }
+        .btn-danger { background-color: #e53e3e; color: #fff; }
+        .btn-danger:hover { background-color: #c53030; }
+        .btn-warning { background-color: #ed8936; color: #fff; }
+        .btn-warning:hover { background-color: #dd6b20; }
+        .btn-success { background-color: #38a169; color: #fff; }
+        .btn-success:hover { background-color: #2f855a; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* 表格 */
+        .table-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background-color: #f7fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        table td {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #2d3748;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        table tbody tr:hover { background-color: #f7fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-open { background-color: #bee3f8; color: #2b6cb0; }
+        .badge-claimed { background-color: #c6f6d5; color: #276749; }
+        .badge-closed { background-color: #e2e8f0; color: #4a5568; }
+        .badge-banned { background-color: #fed7d7; color: #c53030; }
+        .badge-active { background-color: #c6f6d5; color: #276749; }
+        .badge-admin { background-color: #e9d8fd; color: #553c9a; }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 16px;
+        }
+
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #4299e1;
+            color: #fff;
+            border-color: #4299e1;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background-color: #4299e1;
+            color: #fff;
+            border-color: #4299e1;
+        }
+
+        .pagination .page-info {
+            font-size: 13px;
+            color: #718096;
+            margin: 0 8px;
+        }
+
+        /* 确认弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9998;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 24px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 { margin-bottom: 12px; color: #2d3748; }
+        .modal p { color: #4a5568; font-size: 14px; margin-bottom: 20px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">🏫 校园助手</div>
+            <nav class="sidebar-menu">
+                <div class="sidebar-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+                    <span>📊</span>
+                    <span>看板</span>
+                </div>
+                <div class="sidebar-item" data-page="users" onclick="switchPage('users')">
+                    <span>👤</span>
+                    <span>用户</span>
+                </div>
+                <div class="sidebar-item" data-page="content" onclick="switchPage('content')">
+                    <span>📦</span>
+                    <span>内容</span>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-nav">
+                <h1>校园助手管理后台</h1>
+                <div class="top-nav-right">
+                    <span class="admin-info">[管理员] <span id="adminName">admin</span></span>
+                    <button class="logout-btn" onclick="logout()">退出登录</button>
+                </div>
+            </header>
+
+            <section class="dashboard">
+                <!-- ==================== 看板页面 ==================== -->
+                <div class="page-content active" id="page-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalUsers"><div class="loading"></div></div>
+                            <div class="stat-label">总用户</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="todayNewUsers"><div class="loading"></div></div>
+                            <div class="stat-label">今日新增</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalPosts"><div class="loading"></div></div>
+                            <div class="stat-label">总发布</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="claimRate"><div class="loading"></div></div>
+                            <div class="stat-label">认领率</div>
+                        </div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-title">近7天趋势</div>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">物品分类统计</div>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== 用户管理页面 ==================== -->
+                <div class="page-content" id="page-users">
+                    <div class="toolbar">
+                        <div class="search-box">
+                            <input type="text" id="userKeyword" placeholder="搜索学号/用户名..." onkeydown="if(event.key==='Enter')searchUsers()">
+                            <button class="btn btn-primary" onclick="searchUsers()">🔍 搜索</button>
+                            <button class="btn" onclick="resetUserSearch()">↻ 重置</button>
+                        </div>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>学号</th>
+                                        <th>用户名</th>
+                                        <th>邮箱</th>
+                                        <th>角色</th>
+                                        <th>状态</th>
+                                        <th>发布数</th>
+                                        <th>注册时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody">
+                                    <tr><td colspan="9"><div class="loading"></div> 加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="userPagination"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== 内容管理页面 ==================== -->
+                <div class="page-content" id="page-content">
+                    <div class="toolbar">
+                        <div class="search-box">
+                            <input type="text" id="contentKeyword" placeholder="搜索标题..." onkeydown="if(event.key==='Enter')searchContent()">
+                            <select id="contentType">
+                                <option value="">全部类型</option>
+                                <option value="LOST">寻物</option>
+                                <option value="FOUND">招领</option>
+                            </select>
+                            <select id="contentStatus">
+                                <option value="">全部状态</option>
+                                <option value="OPEN">进行中</option>
+                                <option value="CLAIMED">已认领</option>
+                                <option value="CLOSED">已关闭</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="searchContent()">🔍 搜索</button>
+                            <button class="btn" onclick="resetContentSearch()">↻ 重置</button>
+                        </div>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>类型</th>
+                                        <th>标题</th>
+                                        <th>分类</th>
+                                        <th>发布者</th>
+                                        <th>状态</th>
+                                        <th>发布时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contentTableBody">
+                                    <tr><td colspan="8"><div class="loading"></div> 加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="contentPagination"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 底部提示容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">确认操作</h3>
+            <p id="modalMessage"></p>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-danger" id="modalConfirmBtn" onclick="confirmModalAction()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        const token = localStorage.getItem('token') || '';
+
+        let trendChart = null;
+        let categoryChart = null;
+        let hasShownError = false;
+
+        let userPage = 1, userPageSize = 10, userKeyword = '';
+        let contentPage = 1, contentPageSize = 10, contentKeyword = '', contentType = '', contentStatus = '';
+        let modalCallback = null;
+
+        // ==================== 通用工具 ====================
+
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const existing = Array.from(container.children).find(t => t.textContent.includes(message));
+            if (existing) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const icon = type === 'success' ? '✅' : '⚠️';
+            toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4000);
+        }
+
+        async function apiFetch(url, options) {
+            options = options || {};
+            options.headers = options.headers || {};
+            options.headers['Authorization'] = 'Bearer ' + token;
+            if (!options.headers['Content-Type'] && !(options.body instanceof FormData)) {
+                options.headers['Content-Type'] = 'application/json';
+            }
+            options.credentials = 'include';
+            const response = await fetch(url, options);
+            const result = await response.json();
+            if (result.code === 200) return result.data;
+            throw new Error(result.message || '请求失败');
+        }
+
+        function showModal(title, message, callback, confirmText) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalConfirmBtn').textContent = confirmText || '确认';
+            modalCallback = callback;
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            modalCallback = null;
+        }
+
+        function confirmModalAction() {
+            if (modalCallback) modalCallback();
+            closeModal();
+        }
+
+        function formatTime(isoStr) {
+            if (!isoStr) return '-';
+            return isoStr.replace('T', ' ').substring(0, 16);
+        }
+
+        function renderPagination(containerId, page, total, pageSize, onPageChange) {
+            const container = document.getElementById(containerId);
+            const totalPages = Math.ceil(total / pageSize) || 1;
+            let html = '';
+            html += `<button ${page <= 1 ? 'disabled' : ''} onclick="${onPageChange}(${page - 1})">‹ 上一页</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - page) <= 1) {
+                    html += `<button class="${i === page ? 'active' : ''}" onclick="${onPageChange}(${i})">${i}</button>`;
+                } else if (i === 2 && page > 3) {
+                    html += `<button disabled>...</button>`;
+                } else if (i === totalPages - 1 && page < totalPages - 2) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+            html += `<button ${page >= totalPages ? 'disabled' : ''} onclick="${onPageChange}(${page + 1})">下一页 ›</button>`;
+            html += `<span class="page-info">共 ${total} 条</span>`;
+            container.innerHTML = html;
+        }
+
+        // ==================== 页面切换 ====================
+
+        function switchPage(page) {
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.sidebar-item[data-page="${page}"]`).classList.add('active');
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            if (page === 'users') loadUsers();
+            if (page === 'content') loadContent();
+        }
+
+        // ==================== 看板 ====================
+
+        async function loadDashboard() {
+            try {
+                const data = await apiFetch(`${API_BASE}/admin/dashboard`);
+                document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                document.getElementById('todayNewUsers').textContent = data.todayNewUsers || 0;
+                document.getElementById('totalPosts').textContent = data.totalLostFound || 0;
+                document.getElementById('claimRate').textContent = data.claimRate || '0.0%';
+                loadTrendChart(data.weeklyTrend);
+                loadCategoryChart(data.categoryStats);
+            } catch (e) {
+                console.error('看板加载失败:', e);
+                if (!hasShownError) { showToast('数据看板加载失败，请检查网络连接'); hasShownError = true; }
+                document.getElementById('totalUsers').textContent = '0';
+                document.getElementById('todayNewUsers').textContent = '0';
+                document.getElementById('totalPosts').textContent = '0';
+                document.getElementById('claimRate').textContent = '0.0%';
+                loadTrendChart(null);
+                loadCategoryChart(null);
+            }
+        }
+
+        function loadTrendChart(weeklyTrend) {
+            let labels, values;
+            if (weeklyTrend && weeklyTrend.length > 0) {
+                labels = weeklyTrend.map(item => item.date);
+                values = weeklyTrend.map(item => (item.lost || 0) + (item.found || 0));
+            } else {
+                labels = ['周一','周二','周三','周四','周五','周六','周日'];
+                values = [0, 0, 0, 0, 0, 0, 0];
+            }
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '发布数量',
+                        data: values,
+                        borderColor: '#4299e1',
+                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                        fill: true, tension: 0.4,
+                        pointBackgroundColor: '#4299e1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        function loadCategoryChart(categoryStats) {
+            let labels, values;
+            const colors = ['#4299e1', '#38a169', '#805ad5', '#ed8936', '#a0aec0', '#f56565', '#48bb78'];
+            if (categoryStats && categoryStats.length > 0) {
+                labels = categoryStats.map(item => item.category);
+                values = categoryStats.map(item => item.count);
+            } else {
+                labels = ['电子产品', '证件卡片', '学习用品', '生活用品', '其他'];
+                values = [20, 20, 20, 20, 20];
+            }
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: colors.slice(0, values.length), borderWidth: 0, hoverOffset: 10 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { padding: 15, usePointStyle: true } } } }
+            });
+        }
+
+        // ==================== 用户管理 ====================
+
+        async function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '<tr><td colspan="9"><div class="loading"></div> 加载中...</td></tr>';
+            try {
+                const params = new URLSearchParams({ page: userPage, pageSize: userPageSize });
+                if (userKeyword) params.set('keyword', userKeyword);
+                const data = await apiFetch(`${API_BASE}/admin/users?${params}`);
+                if (!data.list || data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">暂无用户数据</div></td></tr>';
+                } else {
+                    tbody.innerHTML = data.list.map(u => `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.studentId || '-'}</td>
+                            <td>${u.username || '-'}</td>
+                            <td>${u.email || '-'}</td>
+                            <td><span class="badge ${u.role === 'ADMIN' ? 'badge-admin' : 'badge-active'}">${u.role || 'USER'}</span></td>
+                            <td><span class="badge ${u.isBanned ? 'badge-banned' : 'badge-active'}">${u.isBanned ? '已封禁' : '正常'}</span></td>
+                            <td>${u.postCount || 0}</td>
+                            <td>${formatTime(u.createdAt)}</td>
+                            <td>
+                                <button class="btn btn-sm ${u.isBanned ? 'btn-success' : 'btn-warning'}" onclick="toggleBan(${u.id}, ${u.isBanned})">
+                                    ${u.isBanned ? '✓ 解封' : '⛔ 封禁'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                renderPagination('userPagination', userPage, data.total || 0, userPageSize, 'goUserPage');
+            } catch (e) {
+                console.error('用户列表加载失败:', e);
+                tbody.innerHTML = '<tr><td colspan="9"><div class="error-msg">加载失败: ' + e.message + '</div></td></tr>';
+            }
+        }
+
+        function searchUsers() {
+            userKeyword = document.getElementById('userKeyword').value.trim();
+            userPage = 1;
+            loadUsers();
+        }
+
+        function resetUserSearch() {
+            document.getElementById('userKeyword').value = '';
+            userKeyword = '';
+            userPage = 1;
+            loadUsers();
+        }
+
+        function goUserPage(page) { userPage = page; loadUsers(); }
+
+        function toggleBan(userId, isBanned) {
+            const action = isBanned ? '解封' : '封禁';
+            showModal('确认' + action, `确定要${action}该用户(ID: ${userId})吗？`, async () => {
+                try {
+                    await apiFetch(`${API_BASE}/admin/users/${userId}/ban`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ isBanned: !isBanned })
+                    });
+                    showToast(`用户已${action}`, 'success');
+                    loadUsers();
+                } catch (e) {
+                    showToast(`${action}失败: ` + e.message);
+                }
+            }, action);
+        }
+
+        // ==================== 内容管理 ====================
+
+        async function loadContent() {
+            const tbody = document.getElementById('contentTableBody');
+            tbody.innerHTML = '<tr><td colspan="8"><div class="loading"></div> 加载中...</td></tr>';
+            try {
+                const params = new URLSearchParams({ page: contentPage, pageSize: contentPageSize });
+                if (contentKeyword) params.set('keyword', contentKeyword);
+                if (contentType) params.set('type', contentType);
+                if (contentStatus) params.set('status', contentStatus);
+                const data = await apiFetch(`${API_BASE}/admin/lost-found?${params}`);
+                if (!data.list || data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">暂无内容数据</div></td></tr>';
+                } else {
+                    const typeMap = { LOST: '寻物', FOUND: '招领' };
+                    const statusBadge = { OPEN: 'badge-open', CLAIMED: 'badge-claimed', CLOSED: 'badge-closed' };
+                    const statusText = { OPEN: '进行中', CLAIMED: '已认领', CLOSED: '已关闭' };
+                    tbody.innerHTML = data.list.map(item => `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td><span class="badge ${item.type === 'LOST' ? 'badge-banned' : 'badge-active'}">${typeMap[item.type] || item.type}</span></td>
+                            <td>${item.title || '-'}</td>
+                            <td>${item.category || '-'}</td>
+                            <td>${(item.user && item.user.username) || '-'}</td>
+                            <td><span class="badge ${statusBadge[item.status] || 'badge-closed'}">${statusText[item.status] || item.status}</span></td>
+                            <td>${formatTime(item.createdAt)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteContent(${item.id})">🗑 删除</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                renderPagination('contentPagination', contentPage, data.total || 0, contentPageSize, 'goContentPage');
+            } catch (e) {
+                console.error('内容列表加载失败:', e);
+                tbody.innerHTML = '<tr><td colspan="8"><div class="error-msg">加载失败: ' + e.message + '</div></td></tr>';
+            }
+        }
+
+        function searchContent() {
+            contentKeyword = document.getElementById('contentKeyword').value.trim();
+            contentType = document.getElementById('contentType').value;
+            contentStatus = document.getElementById('contentStatus').value;
+            contentPage = 1;
+            loadContent();
+        }
+
+        function resetContentSearch() {
+            document.getElementById('contentKeyword').value = '';
+            document.getElementById('contentType').value = '';
+            document.getElementById('contentStatus').value = '';
+            contentKeyword = '';
+            contentType = '';
+            contentStatus = '';
+            contentPage = 1;
+            loadContent();
+        }
+
+        function goContentPage(page) { contentPage = page; loadContent(); }
+
+        function deleteContent(id) {
+            showModal('确认删除', `确定要删除该发布(ID: ${id})吗？此操作不可恢复。`, async () => {
+                try {
+                    await apiFetch(`${API_BASE}/admin/lost-found/${id}`, { method: 'DELETE' });
+                    showToast('删除成功', 'success');
+                    loadContent();
+                } catch (e) {
+                    showToast('删除失败: ' + e.message);
+                }
+            }, '删除');
+        }
+
+        // ==================== 通用 ====================
+
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function loadAdminName() {
+            const username = localStorage.getItem('username') || 'admin';
+            document.getElementById('adminName').textContent = username;
+        }
+
+        async function initDashboard() {
+            loadAdminName();
+            await loadDashboard();
+        }
+
+        setInterval(() => {
+            if (document.getElementById('page-dashboard').classList.contains('active')) {
+                loadDashboard();
+            }
+        }, 30000);
+
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>

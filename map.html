@@ -106,10 +106,8 @@
         .nav-select {
             width: 100%;
             padding: 10px;
-            /* border: 1px solid #ddd; */
             border-radius: 4px;
             font-size: 14px;
-            /* background-color: white; */
             backdrop-filter: blur(15px) saturate(180%);
             -webkit-backdrop-filter: blur(15px) saturate(180%);
             background-color: rgba(253,253,253, 0.4);
@@ -124,14 +122,11 @@
             padding: 10px 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            /* background-color: white; */
             cursor: pointer;
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 5px;
-            /* backdrop-filter: blur(15px) saturate(180%); */
-            /* -webkit-backdrop-filter: blur(15px) saturate(180%); */
             background-color: rgba(253,253,253, 0.4);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -140,8 +135,6 @@
             background-color: #4CAF50;
             color: white;
             border-color: #4CAF50;
-            /* backdrop-filter: blur(15px) saturate(180%); */
-            /* -webkit-backdrop-filter: blur(15px) saturate(180%); */
             background-color: rgba( 76,175, 80, 0.8);
             border-radius: 12px;
             border: 1px solid rgba( 76,175, 80, 0.3);
@@ -197,7 +190,6 @@
     
     <!-- 新增导航控制区域 -->
     <div class="nav-container">
-        <!-- <input type="text" class="search-box" placeholder="🔍 搜索地点..."> -->
         <div class="nav-controls">
             <div class="select-container">
                 <select class="nav-select" id="startSelect">
@@ -249,7 +241,6 @@
         const distanceEl = _id("distance");
         const timeEl = _id("time");
         const backBtn = document.querySelector(".back-btn");
-        // const searchBox = document.querySelector(".search-box");
         
         // 地图拖动和缩放相关变量
         let mapOffsetX = 0;
@@ -331,35 +322,10 @@
                 if(history.length > 1)
                     history.back();
                 else {
-                    //window.open('', '_self', ''); // 解决部分浏览器限制
                     window.close();
                 }
             });
-            
-            // 搜索框事件
-            // searchBox.addEventListener('input', handleSearch);
         }
-
-        // function handleSearch(e) {
-        //     const searchTerm = e.target.value.toLowerCase();
-        //     if (searchTerm.length < 2) return;
-            
-        //     // 简单搜索匹配
-        //     const matchedIndex = buildingName.findIndex(name => 
-        //         name.toLowerCase().includes(searchTerm)
-        //     );
-            
-        //     if (matchedIndex !== -1) {
-        //         // 如果没有选择起点，自动填充起点
-        //         if (!startSelect.value) {
-        //             startSelect.value = `building_${matchedIndex}`;
-        //         } 
-        //         // 如果已经选择起点但没有选择终点，自动填充终点
-        //         else if (!endSelect.value) {
-        //             endSelect.value = `building_${matchedIndex}`;
-        //         }
-        //     }
-        // }
 
         function startNavigation() {
             const startValue = startSelect.value;
@@ -426,16 +392,6 @@
         // 绘制精美的导航路径
         function drawNavigationPath() {
             if (!NavPathData || NavPathData.length === 0) return;
-            // if(NavPathData.length === 1) {
-            //     const pts = NavPathData.map(idx => {
-            //         if(idx < 0) return buildingData[-idx-1];
-            //         return crossingData[idx];
-            //     }).filter(p => p);
-            //     const startLabel = navStartLabel ? navStartLabel : '选中点';
-            //     drawNavigationAnchor(pts[0][0], pts[0][1], startLabel, '#00d4ff', '#7a1f24');
-            //     return ;
-            // }
-
             // 收集所有坐标点
             const pts = NavPathData.map(idx => {
                 if(idx < 0) return buildingData[-idx-1];
@@ -602,8 +558,6 @@
             // 绘制所有点位
             drawPoints();
 
-            // connectHelper.drawConnection();
-
             // ===== 精美导航路径 =====
             drawNavigationPath();
 
@@ -624,7 +578,7 @@
                 drawPointMarker(point[0], point[1], "", "green");
             });
 
-            if (selectedPoint) {
+            if (selectedPoint && NavPathData.length <= 1) {
                 let labl = (selectedPoint[0] === undefined && selectedPoint<0)?buildingName[-selectedPoint-1]:"选中点";
                 drawNavigationAnchor(getNodeCoord(selectedPoint)[0], getNodeCoord(selectedPoint)[1], labl, '#00d4ff', '#7a1f24');
             }
@@ -874,7 +828,6 @@
                     startPtIndex = getClosetPoint(curpoint);
                 else {
                     let endPtIndex = getClosetPoint(curpoint);
-                    // pathData.push([startPtIndex, endPtIndex]);
                     if(startPtIndex < 0) startPtIndex = buildingName[-startPtIndex - 1];
                     if(endPtIndex < 0) endPtIndex = buildingName[-endPtIndex - 1];
                     console.log("Planing from ", startPtIndex, " to ", endPtIndex);
@@ -901,21 +854,15 @@
                 confirmBtn.disabled = false;
             if(confirmBtn.innerHTML === '已选中')
                 confirmBtn.innerHTML = "确定选点";
-            // confirmBtn.classList.add("active");
-            // addPoint(x, y, "");
         }
         
         // 地图拖动事件
         canvas.onmousedown = function(e) {
-            // if (e.button !== 0) {
-                isDragging = true;
-                dragged = false;
-                startX = e.clientX - mapOffsetX;
-                startY = e.clientY - mapOffsetY;
-                canvas.style.cursor = 'grabbing';
-            // } else { const rect = canvas.getBoundingClientRect();
-            //     connectHelper.getPt([(e.clientX - rect.left - mapOffsetX) / mapScale, (e.clientY - rect.top - mapOffsetY) / mapScale]);
-            // }
+            isDragging = true;
+            dragged = false;
+            startX = e.clientX - mapOffsetX;
+            startY = e.clientY - mapOffsetY;
+            canvas.style.cursor = 'grabbing';
         };
         canvas.oncontextmenu = function(e) {
             e.preventDefault();
@@ -998,7 +945,6 @@
         // 页面加载完成后初始化
         window.onload = async function () {
             try {
-                // a();
                 response = await fetch('http://localhost:8080/api/navigation/points', {
                     method: 'GET',
                     headers: {

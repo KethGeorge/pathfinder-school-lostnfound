@@ -602,3 +602,11 @@ body {
     45%, 55% { opacity: 0; }
     72%, 100% { opacity: 1; }
 }
+.fly-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    will-change: transform;
+}
